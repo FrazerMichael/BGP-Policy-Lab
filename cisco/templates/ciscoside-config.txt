@@ -18,13 +18,22 @@ ip address {{ each['ip'] }}1 {{ each['netmask'] }}
 {% endif %}
 router bgp {{ AS }}
 bgp router-id {{ interfaces[0]['ip'] }}
+{% if RR == 'True' %}
+bgp cluster-id {{ interfaces[0]['ip'] }}
+{% endif %}
 {% for each in advertising %}
 network {{ each['ip'] }} mask {{ each['netmask'] }}
 {% endfor %}
 {% for each in neighbors %}
 neighbor {{ each['ip'] }} remote {{ each['AS'] }}
-{% if AS == each['AS'] %}
+{% if each['NxtSlf'] == 'yes' %}
 neighbor {{ each['ip'] }} next-hop-self
+{% endif %}
+{% if AS == each['AS'] %}
+neighbor {{ each['ip'] }} update-source Loopback0
+{% if RR == 'True' %}
+neighbor {{ each['ip'] }} route-reflector-client
+{% endif %}
 {% endif %}
 {% endfor %}
 exit
